@@ -116,13 +116,13 @@ public sealed class InvoiceExtractionService(InvoiceTableParser tableParser)
                     Record("amountDue");
                 }
             }
-            var withoutVat = Match(text, @"(?:сумма|итого|всего)\s+без\s+НДС\s*:?\s*(?<amount>" + AmountPattern + ")");
+            var withoutVat = Match(text, @"^\s*(?:(?:сумма|итого|всего)\s+)?без\s+НДС\s*:?\s*(?<amount>" + AmountPattern + @")\s*(?:руб\.?|₽|RUB)?\s*$");
             if (withoutVat.Success)
             {
                 document.AmountWithoutVat = ValueNormalizer.Money(withoutVat.Groups["amount"].Value);
                 Record("amountWithoutVat");
             }
-            var vat = Match(text, @"(?:в\s*т\.?\s*ч\.?\s*|в\s+том\s+числе\s+|сумма\s+)?НДС(?:\s*\(?\d+[.,]?\d*\s*%\)?)?\s*:\s*(?<amount>" + AmountPattern + ")");
+            var vat = Match(text, @"^\s*(?:в\s*т\.?\s*ч\.?\s*|в\s+том\s+числе\s+|сумма\s+)?НДС(?:\s*\(?\d+(?:[.,]\d+)?\s*%\)?)?\s*:?\s*(?<amount>" + AmountPattern + @")\s*(?:руб\.?|₽|RUB)?\s*$");
             if (vat.Success && !Is(text, @"без\s+НДС"))
             {
                 document.VatTotal = ValueNormalizer.Money(vat.Groups["amount"].Value);

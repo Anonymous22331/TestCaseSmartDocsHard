@@ -42,6 +42,17 @@ public sealed class ApiTests : IClassFixture<InvoiceApplication>
     }
 
     [Fact]
+    public async Task PreservesNumericItemNamesInTextPdf()
+    {
+        using var response = await Upload(CreatePdf(itemName: "10 software licenses"), "numeric-name.pdf");
+        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
+        var id = (await response.Content.ReadFromJsonAsync<JobAccepted>())!.JobId;
+        var result = await WaitForCompletion(id);
+        Assert.Equal("ready", result.GetProperty("status").GetString());
+        Assert.Equal("10 software licenses", result.GetProperty("document").GetProperty("items")[0].GetProperty("name").GetString());
+    }
+
+    [Fact]
     public async Task ReturnsReviewForFinancialMismatch()
     {
         using var response = await Upload(CreatePdf(total: "30.00"), "mismatch.pdf");
@@ -148,7 +159,7 @@ public sealed class ApiTests : IClassFixture<InvoiceApplication>
         }
     }
 
-    private static byte[] CreatePdf(int pages = 1, string total = "25.00")
+    private static byte[] CreatePdf(int pages = 1, string total = "25.00", string itemName = "Support")
     {
         var builder = new PdfDocumentBuilder();
         var font = builder.AddStandard14Font(Standard14Font.Helvetica);
@@ -163,7 +174,7 @@ public sealed class ApiTests : IClassFixture<InvoiceApplication>
             Text("Qty", 300, 690);
             Text("Price", 390, 690);
             Text("Amount", 480, 690);
-            Text("Support", 40, 660);
+            Text(itemName, 40, 660);
             Text("2", 300, 660);
             Text("10.00", 390, 660);
             Text("20.00", 480, 660);
