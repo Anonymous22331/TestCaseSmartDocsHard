@@ -17,9 +17,8 @@ public sealed class FileStorage(IOptions<ProcessingOptions> options, ILogger<Fil
     public void Delete(string path)
     {
         var directory = Path.GetDirectoryName(Path.GetFullPath(path));
-        if (directory is null || !Path.GetRelativePath(root, directory).Split(Path.DirectorySeparatorChar)
-                .First().Equals(Path.GetFileName(directory), StringComparison.Ordinal)
-            || Path.GetDirectoryName(directory) != root)
+        if (directory is null || Path.GetDirectoryName(directory) != root
+            || !Guid.TryParseExact(Path.GetFileName(directory), "N", out _))
             throw new InvalidOperationException("The job directory must be inside the storage root.");
         try
         {
