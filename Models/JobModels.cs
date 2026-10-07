@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Mvc;
+
 namespace TestCaseSmartDocsHard.Models;
 
 public sealed record JobAccepted(Guid JobId);
@@ -18,6 +20,7 @@ public sealed record Submission(Guid JobId, bool IsDuplicate);
 
 public sealed class UploadRequest
 {
+    [FromForm(Name = "file")]
     public IFormFile? File { get; init; }
 }
 

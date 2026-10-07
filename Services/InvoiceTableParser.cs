@@ -7,10 +7,10 @@ public sealed class InvoiceTableParser
 {
     public void Extract(RecognizedDocument recognized, ExtractedInvoice result)
     {
+        List<(string Name, decimal X)>? columns = null;
+        var inTable = false;
         foreach (var page in recognized.Pages)
         {
-            List<(string Name, decimal X)>? columns = null;
-            var inTable = false;
             foreach (var line in page.Lines)
             {
                 if (TryColumns(line, out var header))

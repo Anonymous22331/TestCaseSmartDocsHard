@@ -10,6 +10,7 @@ public sealed class LocalProcessRunner(IOptions<ProcessingOptions> options, ILog
 {
     public async Task<string> RunAsync(string executable, IEnumerable<string> arguments, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeout.CancelAfter(TimeSpan.FromSeconds(options.Value.ProcessTimeoutSeconds));
         using var process = new Process
@@ -51,7 +52,7 @@ public sealed class LocalProcessRunner(IOptions<ProcessingOptions> options, ILog
         {
             var stdout = ReadBoundedAsync(process.StandardOutput, 16 * 1024 * 1024, timeout.Token);
             var stderr = ReadBoundedAsync(process.StandardError, 64 * 1024, timeout.Token);
-            await process.WaitForExitAsync(timeout.Token);
+            await Task.WhenAll(process.WaitForExitAsync(timeout.Token), stdout, stderr);
             var output = await stdout;
             var error = await stderr;
             timeout.Token.ThrowIfCancellationRequested();
@@ -79,13 +80,17 @@ public sealed class LocalProcessRunner(IOptions<ProcessingOptions> options, ILog
     {
         var result = new StringBuilder();
         var buffer = new char[4096];
+        var exceeded = false;
         int count;
         while ((count = await reader.ReadAsync(buffer.AsMemory(), cancellationToken)) > 0)
         {
             var remaining = limit - result.Length;
+            exceeded |= count > remaining;
             if (remaining > 0)
                 result.Append(buffer, 0, Math.Min(remaining, count));
         }
+        if (exceeded)
+            throw new ProcessingException("process_output_limit", "Local processing output exceeded the supported size limit.");
         return result.ToString();
     }
 }

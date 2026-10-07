@@ -20,7 +20,8 @@ public sealed class DocumentRecognitionService(LocalProcessRunner runner, IOptio
             cancellationToken.ThrowIfCancellationRequested();
             var page = pdf.GetPage(number);
             var words = page.GetWords(NearestNeighbourWordExtractor.Instance)
-                .Select(word => new RecognizedWord(word.Text, (decimal)word.BoundingBox.Left,
+                .Where(word => !string.IsNullOrWhiteSpace(word.Text))
+                .Select(word => new RecognizedWord(word.Text.Trim(), (decimal)word.BoundingBox.Left,
                     (decimal)(page.Height - word.BoundingBox.Top), (decimal)word.BoundingBox.Width,
                     (decimal)word.BoundingBox.Height, 100)).ToList();
             if (HasUsefulText(words))

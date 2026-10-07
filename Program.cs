@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.OpenApi.Models;
 using TestCaseSmartDocsHard.Background;
 using TestCaseSmartDocsHard.Models;
 using TestCaseSmartDocsHard.Services;
@@ -12,6 +13,8 @@ public sealed class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+        builder.Logging.ClearProviders();
+        builder.Logging.AddConsole();
         builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = InvoiceIntakeService.MaxRequestBytes);
         builder.Services.Configure<FormOptions>(options =>
         {
@@ -43,7 +46,7 @@ public sealed class Program
         builder.Services.AddHostedService<InvoiceWorker>();
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
+        builder.Services.AddSwaggerGen(options => options.MapType<decimal>(() => new OpenApiSchema { Type = "string" }));
 
         var app = builder.Build();
         app.Use(async (context, next) =>

@@ -48,7 +48,7 @@ public sealed class InvoiceExtractionService(InvoiceTableParser tableParser)
             else if (Is(text, SellerLabel + @"\s*[:(]"))
                 buyerSection = false;
 
-            var name = Match(text, (buyerSection ? BuyerLabel : SellerLabel) + @"\s*(?:\([^)]*\))?\s*:\s*(?<name>.*?)(?=\s*(?:,?\s*ИНН|,?\s*КПП|,?\s*адрес)\b|$)");
+            var name = Match(text, (buyerSection ? BuyerLabel : SellerLabel) + @"\s*(?:\([^)]*\))?\s*:\s*(?<name>.*?)(?=\s*(?:,?\s*(?:ИНН|INN)|,?\s*КПП|,?\s*адрес)\b|$)");
             if (name.Success)
             {
                 var value = name.Groups["name"].Value.Trim(' ', ',', ';');
